@@ -19,27 +19,52 @@ public class K_means {
     public static void main(String[] args) {
         // TODO code application logic here
         double[] list = {1,2,3,4,50,51,52,53,500,501,502,503};
-        int num_of_clusters = 3;   
+        int k = 3;   
         
-        System.out.println("待分群資料: [1,2,3,4,50,51,52,53,500,501,502,503]");
-        System.out.print("中心點: ");
-        getCenter(list, 3);
-        List<List<Double>> distance = getDistance(List.of(1.0, 502.0, 503.0), list);
-        System.out.println("最小距離的群組: ");
-        distance.stream().forEach(t -> getMinDistance(t));
-        
-        
-        
-        
-        //List<List<Double>> res = algorithm(list, num_of_clusters);
-        //res.stream().forEach(doubleList -> System.out.println(doubleList.toString()));
+        //System.out.println("待分群資料: [1,2,3,4,50,51,52,53,500,501,502,503]");  
+        List<List<Double>> res = algorithm(list, k);
+        res.stream().map(item -> item.toString()).forEach(s -> System.err.println(s));        
     }    
     
     public static List<List<Double>> algorithm(double[] data, int k){
         List<List<Double>> res = new ArrayList<>(); // 存放結果
-        List<Double> center = getCenter(data, k); // 存放中心點
-        List<List<Double>> group = getDistance(center, data);
+        //System.out.print("中心點: ");
+        List<Double> center = List.of(1.0, 500.0, 503.0);
+        //List<Double> center = getCenter(data, k); // 存放中心點
         
+        int count = 0;
+        //直到中心點位置不變
+        while(true){
+            //System.out.println("最小距離的群組: ");
+            List<List<Double>> group = getGroup(center, data);
+            count++;
+            //System.out.printf("第%d次, 取平均值後的中心點: \n", count);
+            List<Double> newCenter = calcNewCenter(group); // 取平均值為中心點
+            //若兩組的中心點不同, 重新計算取平均值為中心點
+            if(!center.equals(newCenter)){
+                //新的取代舊的, 下次再計算
+                center = newCenter;
+            }else{
+                res = group;
+                break;
+            }
+        }
+        
+        //res.stream().map(item -> item.toString()).forEach(s -> System.err.println(s));
+        return res;
+    }
+    
+    //取平均值為中心點
+    public static List<Double> calcNewCenter(List<List<Double>> group){
+        List<Double> res = new ArrayList<>();
+        for(int item=0; item<group.size(); item++){
+            // 記錄中心點的加總
+            double sum = 0.0;
+            for(int index=0; index<group.get(item).size(); index++){
+                sum += group.get(item).get(index);
+            }
+            res.add( sum / group.get(item).size());
+        }
         return res;
     }
     
@@ -57,13 +82,13 @@ public class K_means {
             }
         }
         //由小到大排序
-        System.out.println(res.stream().sorted().collect(Collectors.toList()).toString());
+        //System.out.println(res.stream().sorted().collect(Collectors.toList()).toString());
         return res.stream().sorted().collect(Collectors.toList());
     }
     
     //已經驗證過是預期的結果
     // 取得各中心點與各資料的距離
-    public static List<List<Double>> getDistance(List<Double> center, double[] data){
+    public static List<List<Double>> getGroup(List<Double> center, double[] data){
         List<List<Double>> res = new ArrayList<>(); // 存放分組結果        
         for(int num=0; num<center.size(); num++){
             List<Double> group = new ArrayList<>();
@@ -80,20 +105,9 @@ public class K_means {
             //依據距離, 存入最靠近的中心點
             res.get(getMinDistance(distance)).add(data[i]);
         }
-        System.out.println("各資料與各中心點的距離: ");
-        res.stream().map(list -> list.toString()).forEach(s -> System.err.println(s));
+        //System.out.println("各資料與各中心點的距離: ");
+        //res.stream().map(list -> list.toString()).forEach(s -> System.err.println(s));
         return res;     
-        
-//        for(int i=0; i<center.size(); i++){//以中心點跟資料做比對
-//            List<Double> distance = new ArrayList<>(); // 存放與中心點的距離
-//            for(int j=0; j<data.length; j++){
-//                //取得資料與給個中心點的距離
-//                distance.add(Math.abs(center.get(i) - data[j]));
-//            }
-//            res.add(distance);
-//        }
-//        res.stream().map(list -> list.toString()).forEach(s -> System.err.println(s));
-//        return res;
     }
     
     //已經驗證過是預期的結果
